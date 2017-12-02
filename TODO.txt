@@ -1,0 +1,15 @@
+ Todo
+ 
+ OVERALL OBJECTIVE:  TEACH NN TO COUNT CARDS AND/OR TO BEAT THE CASINO VIA FLAT BETTING
+ 
+ 1.   Multi layer NN implementations
+ Try to get a NN that can play basic strategy perfectly via simple matrix
+ Try to do for complex matrix
+ 
+ 
+ 
+ 2.  Implement Strategy arena using edge as fitness
+ Randomize 100 initial strategies. 
+ pick the top 50 as candidates, replicate and mix
+ 
+ 
