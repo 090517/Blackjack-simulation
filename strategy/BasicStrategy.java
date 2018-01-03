@@ -1,6 +1,6 @@
 package strategy;
 
-import bjGame.*;
+import gameMechanics.*;
 
 public class BasicStrategy {
 

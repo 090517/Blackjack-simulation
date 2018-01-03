@@ -1,4 +1,4 @@
-package bjGame;
+package gameMechanics;
 
 public enum Decision {
 	HIT, STAND, DOUBLEDOWN, SURRENDER, SPLIT;

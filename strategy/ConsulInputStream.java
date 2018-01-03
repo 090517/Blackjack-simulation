@@ -2,9 +2,9 @@ package strategy;
 
 import java.util.Scanner;
 
-import bjGame.Board;
-import bjGame.Decision;
-import bjGame.Hand;
+import gameMechanics.Board;
+import gameMechanics.Decision;
+import gameMechanics.Hand;
 
 public class ConsulInputStream extends InputStream {
 	Scanner scanner = new Scanner(System.in);

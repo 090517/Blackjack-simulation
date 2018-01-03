@@ -1,4 +1,4 @@
-package bjGame;
+package gameMechanics;
 
 import java.util.ArrayList;
 import java.util.Random;

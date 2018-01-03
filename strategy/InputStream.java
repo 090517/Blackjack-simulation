@@ -1,9 +1,9 @@
 package strategy;
 
 import java.util.Arrays;
-import bjGame.Board;
-import bjGame.Decision;
-import neuralNet.BJNeuralNet;
+
+import gameMechanics.Board;
+import gameMechanics.Decision;
 import rules.Rules;
 
 public class InputStream {
@@ -40,35 +40,22 @@ public class InputStream {
 	}
 
 	public double[] round3decisionMatrix(Board mainBoard) {
-
-		double[] output = null;
 		Decision decision=roundThree(mainBoard);
-		//System.out.println("Decision is:" + Decision.decisionToString(decision));
 		//false for simple training below, becareful
 		
 		switch (decision) {
 		case HIT:
-			//System.out.println("hit");
-			output = new double[] { 1.0, 0.0, 0.0, 0.0, 0.0 };
-			break;
+			return new double[] { 1.0, 0.0, 0.0, 0.0, 0.0 };
 		case STAND:
-			//System.out.println("Stand");
-			output = new double[] { 0.0, 1.0, 0.0, 0.0, 0.0 };
-			break;
+			return new double[] { 0.0, 1.0, 0.0, 0.0, 0.0 };
 		case DOUBLEDOWN:
-			//System.out.println("double down");
-			output = new double[] { 0.0, 0.0, 1.0, 0.0, 0.0 };
-			break;
+			return new double[] { 0.0, 0.0, 1.0, 0.0, 0.0 };
 		case SURRENDER:
-			//System.out.println("Surrender");
-			output = new double[] { 0.0, 0.0, 0.0, 1.0, 0.0 };
-			break;
+			return new double[] { 0.0, 0.0, 0.0, 1.0, 0.0 };
 		case SPLIT:
-			//System.out.println("split");
-			output = new double[] { 0.0, 0.0, 0.0, 0.0, 1.0 };
-			break;
+			return new double[] { 0.0, 0.0, 0.0, 0.0, 1.0 };
 		}
-		return output;
+		return null;
 	}
 
 	public void printStrategy() {
@@ -196,5 +183,15 @@ public class InputStream {
 	public void updateNN() {
 		// TODO Auto-generated method stub
 		
+	}
+
+	public double[] bettingDecision(double[] bettingMatrix) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public boolean[] insuranceDecision(double[] insuranceMatrix) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

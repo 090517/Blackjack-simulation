@@ -1,4 +1,4 @@
-package bjGame;
+package gameMechanics;
 
 import java.util.ArrayList;
 import java.util.ListIterator;
@@ -10,16 +10,14 @@ public class Board {
 	public Shoe mainShoe;
 	public Hand dealerHand;
 	public ArrayList<Hand> playerHands;
-	public ArrayList<Card> trash;
 	public double playerChipStack;
-	int round = 0; // 0 new round, 1
+	public int round = 0; // 0 new round, 1
 	ListIterator<Hand> litr; // iterator to current hand
 	public Hand currentHand;
-	// RULES
 	public Rules gameRules;
 	boolean textOn;
 	public int totalMoneyBet;
-	int[] trashCount;
+	public int[] cardCount;
 
 	// CONSTRUCTOR
 	public Board(Rules newGameRules, boolean newTextOn) {
@@ -29,23 +27,17 @@ public class Board {
 		playerChipStack = gameRules.CHIPSTACK;
 		dealerHand = new Hand(0, gameRules);
 		playerHands = new ArrayList<Hand>();
-		trash = new ArrayList<Card>();
 		round = 0;
 		totalMoneyBet = 0;
-		trashCount = new int[10];
+		cardCount=new int[10];
 
 		for (int i = 0; i < gameRules.INITIALNUMSHUFFLE; i++) {
 			mainShoe.riffleShuffle();
 		}
-
-		if (textOn) {
-			System.out.println("NEW BOARD CREATED. SHOES:" + gameRules.NUMDECKS + " MINBET:" + gameRules.MINBET
-					+ " MAXBET:" + gameRules.MAXBET + " CHIPS:" + gameRules.CHIPSTACK);
-		}
 	}
 
 	public static Board testBoard(Rules newGameRules) {
-		Board output=new Board(newGameRules, false);
+		Board output = new Board(newGameRules, false);
 		output.addHand(0);
 		output.litr = output.playerHands.listIterator();
 		output.currentHand = output.litr.next();
@@ -79,14 +71,14 @@ public class Board {
 			}
 			// else add a card
 			else {
-				currentHand.addCard(mainShoe.deal());
+				currentHand.addCard(trackedDeal());
 			}
 		}
+		// Give dealer first card, then second. Hole card is always second card
 
-		// Give dealer first card, then second r
-		dealerHand.addCard(mainShoe.deal());
+		dealerHand.addCard(trackedDeal());
 		for (Hand currentHand : playerHands) {
-			currentHand.addCard(mainShoe.deal());
+			currentHand.addCard(trackedDeal());
 		}
 		dealerHand.addCard(mainShoe.deal());
 	}
@@ -236,7 +228,6 @@ public class Board {
 	// End game functions
 
 	public void payoutRound(boolean textOn) {
-
 		if (textOn) {
 			printBoard();
 			System.out.println("---------------END ROUND--------------");
@@ -246,12 +237,12 @@ public class Board {
 		if (gameRules.DEALERHITSONSOFT17) {
 			while ((dealerHand.checkSoft() && (dealerHand.getAceValue() < 18))
 					|| (!dealerHand.checkSoft() && (dealerHand.getValue() < 17))) {
-				dealerHand.addCard(mainShoe.deal());
+				dealerHand.addCard(trackedDeal());
 			}
 		} else {
 			while ((dealerHand.checkSoft() && (dealerHand.getAceValue() < 17))
 					|| (!dealerHand.checkSoft() && (dealerHand.getValue() < 17))) {
-				dealerHand.addCard(mainShoe.deal());
+				dealerHand.addCard(trackedDeal());
 			}
 		}
 
@@ -302,21 +293,14 @@ public class Board {
 	}
 
 	public boolean cleanupRound() {
-		// putting a copy of all cards in trash
-
-		// deletes hand, clears player hands
-
-		for (Hand tempHand : playerHands) {
-			trashCopyHand(tempHand);
-		}
-		trashCopyHand(dealerHand);
+		cardCount[dealerHand.handCards.get(1).getBJValue()
+				- 1] = cardCount[dealerHand.handCards.get(1).getBJValue() - 1] + 1;
 		playerHands.clear();
 		dealerHand.handClear();
 		round = 0;
 
 		if ((mainShoe.mainShoe.size() * 100 / (gameRules.NUMDECKS * 60)) <= (gameRules.RESHUFFLEAFTER)) {
 			mainShoe.reset();
-			trash.clear();
 			for (int i = 0; i < gameRules.INITIALNUMSHUFFLE; i++) {
 				mainShoe.riffleShuffle();
 			}
@@ -339,42 +323,19 @@ public class Board {
 		return playerHands.get(litr.nextIndex());
 	}
 
-	// Print Methods
-
-	public void printBoard() {
-		// Dealer Card
-		System.out.println("----------------BOARD-----------------");
-		System.out.println("CHIPS: " + playerChipStack);
-		System.out.println(dealerHand.dealerUpCard());
-
-		// Player Cards
-		for (int i = 0; i < playerHands.size(); i++) {
-			System.out.println(handToStringWithIndex(playerHands.get(i), i));
-		}
-	}
-
-	public static String handToStringWithIndex(Hand tempHand, int handIndex) {
-		return ("HAND " + (handIndex + 1) + " " + tempHand.handToString());
-	}
-
-	public String printCurrentHand() {
-		return ("HAND " + litr.previousIndex() + " " + currentHand.handToString());
-	}
-
 	// PRIVATE METHODS
 
 	private void push(Hand payoutHand) {
 		playerChipStack += payoutHand.betSize;
 	}
 
-	private void trashCopyHand(Hand tempHand) {
-		for (Card tempCard : tempHand.handCards) {
-			trash.add(tempCard);
-			trashCount[tempCard.getBJValue() - 1] = trashCount[tempCard.getBJValue() - 1] + 1;
-		}
+	private Card trackedDeal() {
+		Card tempCard = mainShoe.deal();
+		cardCount[tempCard.getBJValue() - 1] = cardCount[tempCard.getBJValue() - 1] + 1;
+		return tempCard;
 	}
 
-	// blackjack actions
+	// Blackjack actions
 
 	public void addInsurance(Hand tempHand) {
 		gambleChipStack(tempHand.betSize * .5);
@@ -396,7 +357,11 @@ public class Board {
 	public Hand splitHand(Hand tempHand) {
 		gambleChipStack(tempHand.betSize);
 		Hand newHand = tempHand.splitHand(gameRules);
-		newHand.addCard(mainShoe.deal());
+
+		Card tempCard = mainShoe.deal();
+		cardCount[tempCard.getBJValue() - 1] = cardCount[tempCard.getBJValue() - 1] + 1;
+
+		newHand.addCard(tempCard);
 		tempHand.addCard(mainShoe.deal());
 		return newHand;
 	}
@@ -415,46 +380,88 @@ public class Board {
 		}
 	}
 
-	public double[] boardMatrix(boolean simpleTraining) {
-		if (simpleTraining) {
-			double[] output = new double[22];
-			output[0] = dealerHand.handCards.get(1).getBJValue();
-			for (int i = 0; i < currentHand.handCards.size(); i++) {
-				output[i + 1] = currentHand.handCards.get(i).getBJValue();
-			}
-			return output;
-		} else {
-			double[] output = new double[1358];
+	//Print Methods
 
-			// 0-9 copying from trashcount array
-			for (int i = 0; i < trashCount.length; i++) {
-				output[i] = trashCount[i];
-			}
-
-			output[10] = mainShoe.cardsLeft();
-			output[11] = dealerHand.handCards.get(1).getBJValue();
-			output[12] = playerChipStack;
-			output[13] = round;
-			output[14] = litr.previousIndex();
-
-			// maximum numbner of cards 21, max number of hands MAXHANDS*2^maxsplit=
-			// 8*2^3=8*8
-
-			int i = 0, j = 0;
-
-			for (Hand tempHand : playerHands) {
-				for (Card tempCard : tempHand.handCards) {
-					output[14 + (j * 21) + (i + 1)] = tempCard.getBJValue();
-					i++;
-				}
-				i = 0;
-				j++;
-			}
-			return output;
+	public void printBoard() {
+		// Dealer Card
+		System.out.println("----------------BOARD-----------------");
+		System.out.println("CHIPS: " + playerChipStack);
+		System.out.println(dealerHand.dealerUpCard());
+		// Player Cards
+		for (int i = 0; i < playerHands.size(); i++) {
+			System.out.println(handToStringWithIndex(playerHands.get(i), i));
 		}
 	}
-	
+
+	public static String handToStringWithIndex(Hand tempHand, int handIndex) {
+		return ("HAND " + (handIndex + 1) + " " + tempHand.handToString());
+	}
+
+	public String printCurrentHand() {
+		return ("HAND " + litr.previousIndex() + " " + currentHand.handToString());
+	}
+
 	public double edgeCalc() {
-		return (playerChipStack * 100 / totalMoneyBet);
+		return (playerChipStack/totalMoneyBet)*100;
+	}
+	
+	// NN outputs
+
+	public double[] bettingMatrix() {
+		double[] output = new double[11];
+		for (int i = 0; i < 10; i++) {
+			output[i] = (double) cardCount[i];
+		}
+		output[10] = (double) gameRules.NUMDECKS;
+		output[11] = (double) mainShoe.cardsLeft() / (gameRules.NUMDECKS * 60);
+		return output;
+	}
+
+	public double[] insuranceMatrix() {
+		double[] output = new double[3];
+		output[0] = cardCount[9] / (gameRules.NUMDECKS * 16);
+		return output;
+	}
+
+	public double[] boardMatrix() {
+
+		double[] output = new double[22];
+		output[0] = dealerHand.handCards.get(1).getBJValue();
+		for (int i = 0; i < currentHand.handCards.size(); i++) {
+			output[i + 1] = currentHand.handCards.get(i).getBJValue();
+		}
+		return output;
+		/*
+		 * else { double[] output = new double[1358];
+		 * 
+		 * // 0-9 copying from trashcount array for (int i = 0; i < cardCount.length;
+		 * i++) { output[i] = cardCount[i]; }
+		 * 
+		 * output[10] = mainShoe.cardsLeft(); output[11] =
+		 * dealerHand.handCards.get(1).getBJValue(); output[12] = playerChipStack;
+		 * output[13] = round; output[14] = litr.previousIndex();
+		 * 
+		 * // maximum numbner of cards 21, max number of hands MAXHANDS*2^maxsplit= //
+		 * 8*2^3=8*8
+		 * 
+		 * int i = 0, j = 0;
+		 * 
+		 * for (Hand tempHand : playerHands) { for (Card tempCard : tempHand.handCards)
+		 * { output[14 + (j * 21) + (i + 1)] = tempCard.getBJValue(); i++; } i = 0; j++;
+		 * } return output;
+		 */
+	}
+	
+	public double[] boardMatrixWCount() {
+		double[] output = new double[31];
+		output[0] = dealerHand.handCards.get(1).getBJValue();
+		for (int i=1; i<=10; i++) {
+			output[i]=cardCount[i-1];
+		}
+		for (int i = 11; i < currentHand.handCards.size(); i++) {
+			output[i] = currentHand.handCards.get(i).getBJValue();
+		}
+		//todofill the rest with zeros - don't needto doubles are auto initialized to zero
+		return output;
 	}
 }

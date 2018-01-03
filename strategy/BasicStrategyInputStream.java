@@ -1,7 +1,7 @@
 package strategy;
 
-import bjGame.Board;
-import bjGame.Decision;
+import gameMechanics.Board;
+import gameMechanics.Decision;
 
 public class BasicStrategyInputStream extends InputStream {
 	
